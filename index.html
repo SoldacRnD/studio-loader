@@ -326,11 +326,12 @@
     <script>
 (function () {
   const BACKEND = "https://grams-backend-clean.onrender.com";
+
   const url = new URL(location.href);
   const tag = url.searchParams.get("tag");
 
   if (!tag) {
-    addLog("> ERROR: NFC TAG MISSING.");
+    addLog("> ERROR: missing ?tag=TAG-XXXX");
     return;
   }
 
@@ -338,41 +339,45 @@
   const HEALTH = `${BACKEND}/api/health?ts=${Date.now()}`;
 
   let attempts = 0;
-  const MAX = 30; // ~30s
+  const MAX = 35;
 
-  function wake() {
-    attempts++;
-    addLog(`> WAKING NODE… (${attempts})`);
-
-    fetch(HEALTH, { cache: "no-store" })
-      .then(r => {
-        if (r.ok) {
-          addLog("<span style='color:#00ff00'>> NODE ONLINE. TRANSFERRING…</span>");
-          setTimeout(() => {
-            location.replace(TARGET);
-          }, 700);
-        } else {
-          retry();
-        }
-      })
-      .catch(retry);
+  function go() {
+    addLog("<span style='color:#00ff00'>> OPENING YOUR GRAM…</span>");
+    setTimeout(() => location.replace(TARGET), 600);
   }
 
   function retry() {
     if (attempts >= MAX) {
-      addLog("> TAKING LONGER THAN USUAL. TAP TO CONTINUE.");
-      card.onclick = () => location.href = TARGET;
+      addLog("> TAKING LONGER THAN USUAL.");
+      addLog("> TAP ANYWHERE TO CONTINUE.");
+      document.body.style.cursor = "pointer";
+      document.body.onclick = () => (location.href = TARGET);
       return;
     }
-    setTimeout(wake, 1000);
+    setTimeout(ping, 1000);
   }
 
-  // Start after a short cinematic delay
-  setTimeout(wake, 2500);
+  function ping() {
+    attempts++;
+    addLog(`> WAKING SERVER… (${attempts}s)`);
+
+    fetch(HEALTH, { cache: "no-store" })
+      .then((res) => {
+        if (res.ok) return go();
+        retry();
+      })
+      .catch(retry);
+  }
+
+  // Start after your cinematic delay (adjust if you want)
+  setTimeout(ping, 1200);
 })();
 </script>
+
+
 
 </body>
 
 </html>
+
 
