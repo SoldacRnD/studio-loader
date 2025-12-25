@@ -318,64 +318,36 @@
     <script>
 (function () {
   const BACKEND = "https://grams-backend-clean.onrender.com";
+  const tag = new URL(location.href).searchParams.get("tag");
 
-  const url = new URL(location.href);
-  const tag = url.searchParams.get("tag");
-
-  if (!tag) {
-    addLog("> ERROR: missing ?tag=TAG-XXXX");
-    return;
-  }
+  if (!tag) { addLog("> ERROR: missing ?tag=TAG-XXXX"); return; }
 
   const TARGET = `${BACKEND}/t/${encodeURIComponent(tag)}`;
-  const PROBE  = `${BACKEND}/t/${encodeURIComponent(tag)}?probe=1&ts=${Date.now()}`;
+  const HEALTH = `${BACKEND}/api/health?ts=${Date.now()}`;
 
-  let attempts = 0;        // ✅ FIX: define attempts
-  let delay = 900;         // start delay
-  const MAX_ATTEMPTS = 40; // optional safety
+  let attempts = 0;
+
+  function go() {
+    addLog("<span style='color:#00ff00'>> SERVER READY. OPENING…</span>");
+    setTimeout(() => location.replace(TARGET), 350);
+  }
 
   function ping() {
     attempts++;
-    addLog(`> WAKING SERVER… (${attempts})`);
+    addLog(`> WAKING SERVER… (${attempts}s)`);
 
-    fetch(PROBE, { method: "HEAD", cache: "no-store" })
-      .then((res) => {
-        if (res.ok) {
-          addLog("<span style='color:#00ff00'>> SERVER READY. OPENING…</span>");
-          setTimeout(() => location.replace(TARGET), 400);
-          return;
-        }
-
-        if (attempts >= MAX_ATTEMPTS) {
-          addLog("> STILL WAKING… OPENING ANYWAY.");
-          setTimeout(() => location.replace(TARGET), 600);
-          return;
-        }
-
-        delay = Math.min(delay + 400, 3500);
-        setTimeout(ping, delay);
-      })
-      .catch(() => {
-        if (attempts >= MAX_ATTEMPTS) {
-          addLog("> STILL WAKING… OPENING ANYWAY.");
-          setTimeout(() => location.replace(TARGET), 600);
-          return;
-        }
-        delay = Math.min(delay + 400, 3500);
-        setTimeout(ping, delay);
-      });
+    fetch(HEALTH, { cache: "no-store" })
+      .then(res => res.ok ? go() : setTimeout(ping, 1000))
+      .catch(() => setTimeout(ping, 1000));
   }
 
   setTimeout(ping, 700);
 })();
 </script>
-
-
-
-
 </body>
 
 </html>
+
 
 
 
