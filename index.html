@@ -323,13 +323,14 @@
   if (!tag) { addLog("> ERROR: missing ?tag=TAG-XXXX"); return; }
 
   const TARGET = `${BACKEND}/t/${encodeURIComponent(tag)}`;
-  const HEALTH = `${BACKEND}/api/health?ts=${Date.now()}`;
+  const HEALTH  = `${BACKEND}/api/health?ts=${Date.now()}`;
 
   let attempts = 0;
+  const MAX = 12; // ~12s then redirect anyway
 
-  function go() {
-    addLog("<span style='color:#00ff00'>> SERVER READY. OPENING…</span>");
-    setTimeout(() => location.replace(TARGET), 350);
+  function openNow() {
+    addLog("<span style='color:#00ff00'>> OPENING…</span>");
+    setTimeout(() => location.replace(TARGET), 250);
   }
 
   function ping() {
@@ -337,16 +338,25 @@
     addLog(`> WAKING SERVER… (${attempts}s)`);
 
     fetch(HEALTH, { cache: "no-store" })
-      .then(res => res.ok ? go() : setTimeout(ping, 1000))
-      .catch(() => setTimeout(ping, 1000));
+      .then(res => {
+        if (res.ok) return openNow();
+        if (attempts >= MAX) return openNow();
+        setTimeout(ping, 1000);
+      })
+      .catch(() => {
+        if (attempts >= MAX) return openNow();
+        setTimeout(ping, 1000);
+      });
   }
 
-  setTimeout(ping, 700);
+  setTimeout(ping, 600);
 })();
 </script>
+
 </body>
 
 </html>
+
 
 
 
