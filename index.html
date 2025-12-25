@@ -328,38 +328,55 @@
   }
 
   const TARGET = `${BACKEND}/t/${encodeURIComponent(tag)}`;
- const PROBE = `${BACKEND}/t/${encodeURIComponent(tag)}?probe=1&ts=${Date.now()}`;
-let delay = 900;
+  const PROBE  = `${BACKEND}/t/${encodeURIComponent(tag)}?probe=1&ts=${Date.now()}`;
 
-function ping() {
-  attempts++;
-  addLog(`> WAKING SERVER… (${attempts})`);
+  let attempts = 0;        // ✅ FIX: define attempts
+  let delay = 900;         // start delay
+  const MAX_ATTEMPTS = 40; // optional safety
 
-  fetch(PROBE, { method: "HEAD", cache: "no-store" })
-    .then(res => {
-      if (res.ok) {
-        addLog("<span style='color:#00ff00'>> SERVER READY. OPENING…</span>");
-        location.replace(`${BACKEND}/t/${encodeURIComponent(tag)}`);
-        return;
-      }
-      delay = Math.min(delay + 400, 3500);
-      setTimeout(ping, delay);
-    })
-    .catch(() => {
-      delay = Math.min(delay + 400, 3500);
-      setTimeout(ping, delay);
-    });
-}
-setTimeout(ping, 700);
+  function ping() {
+    attempts++;
+    addLog(`> WAKING SERVER… (${attempts})`);
 
+    fetch(PROBE, { method: "HEAD", cache: "no-store" })
+      .then((res) => {
+        if (res.ok) {
+          addLog("<span style='color:#00ff00'>> SERVER READY. OPENING…</span>");
+          setTimeout(() => location.replace(TARGET), 400);
+          return;
+        }
+
+        if (attempts >= MAX_ATTEMPTS) {
+          addLog("> STILL WAKING… OPENING ANYWAY.");
+          setTimeout(() => location.replace(TARGET), 600);
+          return;
+        }
+
+        delay = Math.min(delay + 400, 3500);
+        setTimeout(ping, delay);
+      })
+      .catch(() => {
+        if (attempts >= MAX_ATTEMPTS) {
+          addLog("> STILL WAKING… OPENING ANYWAY.");
+          setTimeout(() => location.replace(TARGET), 600);
+          return;
+        }
+        delay = Math.min(delay + 400, 3500);
+        setTimeout(ping, delay);
+      });
+  }
+
+  setTimeout(ping, 700);
 })();
 </script>
+
 
 
 
 </body>
 
 </html>
+
 
 
 
