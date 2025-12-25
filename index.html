@@ -328,41 +328,30 @@
   }
 
   const TARGET = `${BACKEND}/t/${encodeURIComponent(tag)}`;
-  const PROBE = `${BACKEND}/t/${encodeURIComponent(tag)}?probe=1&ts=${Date.now()}`;
+ const PROBE = `${BACKEND}/t/${encodeURIComponent(tag)}?probe=1&ts=${Date.now()}`;
+let delay = 900;
 
-  let attempts = 0;
-  const MAX = 35;
+function ping() {
+  attempts++;
+  addLog(`> WAKING SERVER… (${attempts})`);
 
-  function go() {
-    addLog("<span style='color:#00ff00'>> OPENING YOUR GRAM…</span>");
-    setTimeout(() => location.replace(TARGET), 600);
-  }
+  fetch(PROBE, { method: "HEAD", cache: "no-store" })
+    .then(res => {
+      if (res.ok) {
+        addLog("<span style='color:#00ff00'>> SERVER READY. OPENING…</span>");
+        location.replace(`${BACKEND}/t/${encodeURIComponent(tag)}`);
+        return;
+      }
+      delay = Math.min(delay + 400, 3500);
+      setTimeout(ping, delay);
+    })
+    .catch(() => {
+      delay = Math.min(delay + 400, 3500);
+      setTimeout(ping, delay);
+    });
+}
+setTimeout(ping, 700);
 
-  function retry() {
-    if (attempts >= MAX) {
-      addLog("> TAKING LONGER THAN USUAL.");
-      addLog("> TAP ANYWHERE TO CONTINUE.");
-      document.body.style.cursor = "pointer";
-      document.body.onclick = () => (location.href = TARGET);
-      return;
-    }
-    setTimeout(ping, 1000);
-  }
-
-  function ping() {
-    attempts++;
-    addLog(`> WAKING SERVER… (${attempts}s)`);
-
-    fetch(PROBE, { method: "HEAD", cache: "no-store" })
-      .then((res) => {
-        if (res.ok) return go();
-        retry();
-      })
-      .catch(retry);
-  }
-
-  // Start after your cinematic delay (adjust if you want)
-  setTimeout(ping, 1200);
 })();
 </script>
 
@@ -371,6 +360,7 @@
 </body>
 
 </html>
+
 
 
 
