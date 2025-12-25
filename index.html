@@ -328,7 +328,7 @@
   }
 
   const TARGET = `${BACKEND}/t/${encodeURIComponent(tag)}`;
-  const HEALTH = `${BACKEND}/api/health?ts=${Date.now()}`;
+  const PROBE = `${BACKEND}/t/${encodeURIComponent(tag)}?probe=1&ts=${Date.now()}`;
 
   let attempts = 0;
   const MAX = 35;
@@ -353,7 +353,7 @@
     attempts++;
     addLog(`> WAKING SERVER… (${attempts}s)`);
 
-    fetch(HEALTH, { cache: "no-store" })
+    fetch(PROBE, { method: "HEAD", cache: "no-store" })
       .then((res) => {
         if (res.ok) return go();
         retry();
@@ -371,6 +371,7 @@
 </body>
 
 </html>
+
 
 
 
