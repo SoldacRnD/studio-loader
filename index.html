@@ -314,15 +314,7 @@
             }
         }
         bootMessages();
-
-        // 6. SERVER STATUS (RENDER COLD START)
-        function checkServer() {
-            fetch('https://https://grams-backend-clean.onrender.com', { mode: 'no-cors' })
-                .then(() => addLog("<span style='color:#00ff00'>> NODE ONLINE. SYSTEM READY.</span>"))
-                .catch(() => setTimeout(checkServer, 5000));
-        }
-        setTimeout(checkServer, 3000);
-    </script>
+</script>
     <script>
 (function () {
   const BACKEND = "https://grams-backend-clean.onrender.com";
@@ -379,5 +371,6 @@
 </body>
 
 </html>
+
 
 
