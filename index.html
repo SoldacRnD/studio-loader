@@ -323,6 +323,56 @@
         }
         setTimeout(checkServer, 3000);
     </script>
+    <script>
+(function () {
+  const BACKEND = "https://grams-backend-clean.onrender.com";
+  const url = new URL(location.href);
+  const tag = url.searchParams.get("tag");
+
+  if (!tag) {
+    addLog("> ERROR: NFC TAG MISSING.");
+    return;
+  }
+
+  const TARGET = `${BACKEND}/t/${encodeURIComponent(tag)}`;
+  const HEALTH = `${BACKEND}/api/health?ts=${Date.now()}`;
+
+  let attempts = 0;
+  const MAX = 30; // ~30s
+
+  function wake() {
+    attempts++;
+    addLog(`> WAKING NODE… (${attempts})`);
+
+    fetch(HEALTH, { cache: "no-store" })
+      .then(r => {
+        if (r.ok) {
+          addLog("<span style='color:#00ff00'>> NODE ONLINE. TRANSFERRING…</span>");
+          setTimeout(() => {
+            location.replace(TARGET);
+          }, 700);
+        } else {
+          retry();
+        }
+      })
+      .catch(retry);
+  }
+
+  function retry() {
+    if (attempts >= MAX) {
+      addLog("> TAKING LONGER THAN USUAL. TAP TO CONTINUE.");
+      card.onclick = () => location.href = TARGET;
+      return;
+    }
+    setTimeout(wake, 1000);
+  }
+
+  // Start after a short cinematic delay
+  setTimeout(wake, 2500);
+})();
+</script>
+
 </body>
 
 </html>
+
